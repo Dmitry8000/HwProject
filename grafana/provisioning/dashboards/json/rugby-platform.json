@@ -1,0 +1,124 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [],
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "options": { "0": { "color": "red", "index": 0, "text": "DOWN" } }, "type": "value" },
+            { "options": { "1": { "color": "green", "index": 1, "text": "UP" } }, "type": "value" }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "id": 10,
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "up{job=\"clickhouse\"}", "refId": "A" }],
+      "title": "ClickHouse: доступность",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "options": { "0": { "color": "red", "index": 0, "text": "DOWN" } }, "type": "value" },
+            { "options": { "1": { "color": "green", "index": 1, "text": "UP" } }, "type": "value" }
+          ]
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "id": 11,
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "up{job=\"prometheus\"}", "refId": "A" }],
+      "title": "Prometheus: доступность",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] },
+      "gridPos": { "h": 4, "w": 12, "x": 12, "y": 0 },
+      "id": 12,
+      "options": { "colorMode": "value", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "ClickHouseMetrics_MemoryTracking", "legendFormat": "memory", "refId": "A" }],
+      "title": "ClickHouse: память (сейчас)",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "id": 1,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        { "expr": "rate(ClickHouseProfileEvents_Query[1m])", "legendFormat": "queries/s", "refId": "A" },
+        { "expr": "rate(ClickHouseProfileEvents_SelectQuery[1m])", "legendFormat": "select/s", "refId": "B" },
+        { "expr": "rate(ClickHouseProfileEvents_InsertQuery[1m])", "legendFormat": "insert/s", "refId": "C" }
+      ],
+      "title": "ClickHouse: интенсивность запросов",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "id": 2,
+      "targets": [
+        { "expr": "ClickHouseMetrics_Query", "legendFormat": "running queries", "refId": "A" },
+        { "expr": "ClickHouseMetrics_HTTPConnection", "legendFormat": "http connections", "refId": "B" },
+        { "expr": "ClickHouseMetrics_BackgroundMessageBrokerSchedulePoolTask", "legendFormat": "kafka broker tasks", "refId": "C" }
+      ],
+      "title": "ClickHouse: нагрузка (текущие значения)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "id": 3,
+      "targets": [{ "expr": "ClickHouseMetrics_MemoryTracking", "legendFormat": "MemoryTracking", "refId": "A" }],
+      "title": "ClickHouse: память во времени",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "id": 4,
+      "targets": [
+        { "expr": "increase(ClickHouseProfileEvents_FailedQuery[5m])", "legendFormat": "failed queries (5m)", "refId": "A" },
+        { "expr": "increase(ClickHouseProfileEvents_FailedInsertQuery[5m])", "legendFormat": "failed inserts (5m)", "refId": "B" }
+      ],
+      "title": "ClickHouse: ошибки запросов",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "Bps" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 20 },
+      "id": 5,
+      "targets": [
+        { "expr": "rate(ClickHouseProfileEvents_ReadBufferFromFileDescriptorReadBytes[1m])", "legendFormat": "read B/s", "refId": "A" },
+        { "expr": "rate(ClickHouseProfileEvents_WriteBufferFromFileDescriptorWriteBytes[1m])", "legendFormat": "write B/s", "refId": "B" }
+      ],
+      "title": "ClickHouse: дисковый I/O",
+      "type": "timeseries"
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["rugby", "clickhouse", "monitoring"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "timezone": "browser",
+  "title": "Rugby Platform — мониторинг",
+  "uid": "rugby-ch-platform",
+  "version": 2
+}

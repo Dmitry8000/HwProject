@@ -1,0 +1,32 @@
+# Учебные алерты (для демонстрации на защите; Alertmanager не подключён — смотрите вкладку Alerts в Prometheus)
+
+groups:
+  - name: rugby_clickhouse
+    interval: 30s
+    rules:
+      - alert: ClickHouseDown
+        expr: up{job="clickhouse"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "ClickHouse недоступен для Prometheus"
+          description: "Target clickhouse:9363 не отвечает более 1 минуты."
+
+      - alert: ClickHouseHighMemory
+        expr: ClickHouseMetrics_MemoryTracking > 1500000000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Высокое потребление памяти ClickHouse"
+          description: "MemoryTracking > 1.5 GB (порог для учебного стенда)."
+
+      - alert: ClickHouseFailedQueries
+        expr: increase(ClickHouseProfileEvents_FailedQuery[5m]) > 0
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Есть неуспешные запросы ClickHouse"
+          description: "За 5 минут зафиксированы FailedQuery."

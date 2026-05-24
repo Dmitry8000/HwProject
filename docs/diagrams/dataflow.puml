@@ -1,0 +1,50 @@
+@startuml rugby_dataflow
+!theme plain
+title Поток одного события матча (real-time)
+
+skinparam backgroundColor #F8FAFC
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam sequenceArrowThickness 2
+skinparam sequenceLifeLineBorderColor #94A3B8
+skinparam noteBackgroundColor #FFFBEB
+skinparam noteBorderColor #F59E0B
+
+autonumber
+
+box "Загрузка (ingest)" #D1FAE5
+  participant "stream_match.py" as P
+end box
+
+box "Очередь" #FEF3C7
+  queue "Kafka\nrugby.match.events" as K
+end box
+
+box "ClickHouse" #FEF9C3
+  database "match_events_kafka" as KK
+  database "Materialized View" as MV
+  database "match_events\nRAW" as MT
+  database "v_player_match_metrics\nv_player_zone_activity\nDM · VIEW" as VW
+end box
+
+box "BI" #E0F2FE
+  participant "Superset" as S
+end box
+
+P -> K : JSON событие
+K -> KK : consumer poll
+KK -> MV : SELECT + field_zone
+MV -> MT : INSERT MergeTree
+
+note over MT
+  **RAW** append-only
+  Без --fresh события
+  добавляются, event_id
+  может дублироваться
+end note
+
+S -> VW : SELECT\n(datasets Superset)
+VW -> MT : VIEW читает RAW\n+ JOIN players
+S --> S : графики KPI
+
+@enduml

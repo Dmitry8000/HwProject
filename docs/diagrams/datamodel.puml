@@ -1,0 +1,79 @@
+@startuml rugby_datamodel
+!theme plain
+title Логическая модель данных (БД rugby)
+
+skinparam backgroundColor #F8FAFC
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam arrowColor #64748B
+
+skinparam entity {
+  BackgroundColor<<dim>> #DBEAFE
+  BorderColor<<dim>> #2563EB
+  FontColor<<dim>> #1E3A8A
+  BackgroundColor<<raw>> #F1F5F9
+  BorderColor<<raw>> #475569
+  FontColor<<raw>> #1E293B
+  BackgroundColor<<dm>> #EDE9FE
+  BorderColor<<dm>> #8B5CF6
+  FontColor<<dm>> #4C1D95
+}
+
+entity "matches [DIM]" as matches <<dim>> {
+  * match_id : UInt32
+  --
+  home_team_id
+  away_team_id
+  competition
+  season
+  match_date
+  home_score
+  away_score
+}
+
+entity "players [DIM]" as players <<dim>> {
+  * player_id : UInt32
+  --
+  player_name
+  team_id
+  position
+  position_group
+}
+
+entity "match_events [RAW]" as events <<raw>> {
+  * match_id
+  * event_id
+  --
+  phase_number
+  team_id
+  player_id
+  event_type
+  x_coord, y_coord
+  field_zone
+  gain_line
+  outcome
+  minute, half
+  is_set_piece
+  event_time
+}
+
+entity "v_player_match_metrics [DM · VIEW]" as metrics <<dm>> {
+  player_name
+  team_name
+  gain_line_success_pct
+  offload_success_pct
+  tackle_completion_pct
+}
+
+entity "v_player_zone_activity [DM · VIEW]" as zones <<dm>> {
+  field_zone
+  player_name
+  events_count
+}
+
+matches ||--o{ events : match_id
+players ||--o{ events : player_id
+events ..> metrics : GROUP BY KPI
+events ..> zones : GROUP BY zone
+
+@enduml

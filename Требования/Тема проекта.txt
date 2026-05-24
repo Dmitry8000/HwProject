@@ -1,0 +1,64 @@
+Бизнес-кейс: Аналитический отдел спортивного клуба хочет оценивать эффективность игроков, строить рейтинги и находить слабые места команды через event-based статистику матчей.
+Постановка задачи:
+
+Хранить event-log матча (каждое действие с координатами и временем)
+Считать xG (expected goals) через lookup-таблицу вероятностей по зонам
+Строить heatmap активности игрока по зонам поля
+Рассчитать PPDA (Passes Allowed Per Defensive Action) — метрику прессинга
+
+[24.04.2026 20:12] Alexey Zheleznoy: В регби я слабо понимаю, но вот, что можно взять
+[24.04.2026 20:12] Alexey Zheleznoy: Хранить event-log каждого матча: каждое действие с координатами, временем и фазой игры
+Считать ключевые метрики регби: gain line success, offload rate, tackle completion, territory/possession %
+Анализировать set pieces: конверсию lineout и scrum по зонам поля и игровым ситуациям
+Строить heatmap активности игрока/линии по зонам поля (22m, mid, opposition 22)
+Рассчитывать эффективность фаз атаки: сколько фаз до потери мяча / до прорыва gain line
+
+Примеры таблиц (НЕ обязательно использовать именно так)
+[24.04.2026 20:12] Alexey Zheleznoy: В регби я слабо понимаю, но вот, что можно взять
+[24.04.2026 20:12] Alexey Zheleznoy: Хранить event-log каждого матча: каждое действие с координатами, временем и фазой игры
+Считать ключевые метрики регби: gain line success, offload rate, tackle completion, territory/possession %
+Анализировать set pieces: конверсию lineout и scrum по зонам поля и игровым ситуациям
+Строить heatmap активности игрока/линии по зонам поля (22m, mid, opposition 22)
+Рассчитывать эффективность фаз атаки: сколько фаз до потери мяча / до прорыва gain line
+[24.04.2026 20:13] Alexey Zheleznoy: match_events (
+    match_id       UInt32,
+    event_id       UInt32,          -- порядковый номер события в матче
+    phase_number   UInt16,          -- номер фазы атаки (сбрасывается после потери)
+    team_id        UInt16,
+    player_id      UInt32,
+    event_type     LowCardinality(String),  
+                   -- 'carry','pass','tackle','lineout','scrum',
+                   --  'kick','penalty','ruck','maul','offload','turnover'
+    x_coord        Float32,         -- 0–100 (% поля в длину, от своей линии)
+    y_coord        Float32,         -- 0–68 (ширина стандартного поля в метрах)
+    gain_line      Int8,            -- +1 пересёк, 0 нет, -1 потерял метры
+    outcome        LowCardinality(String),
+                   -- 'success','fail','penalty_won','penalty_conceded','turnover'
+    minute         UInt8,
+    half           UInt8,           -- 1 или 2
+    is_set_piece   UInt8,           -- 1 если lineout/scrum
+    event_time     DateTime
+)
+
+players (
+    player_id      UInt32,
+    player_name    String,
+    team_id        UInt16,
+    position       LowCardinality(String),
+                   -- 'loosehead_prop','hooker','tighthead_prop',
+                   --  'lock','flanker','number_8',
+                   --  'scrum_half','fly_half','centre','wing','fullback'
+    position_group LowCardinality(String)  -- 'forwards','backs'
+)
+
+matches (
+    match_id       UInt32,
+    home_team_id   UInt16,
+    away_team_id   UInt16,
+    competition    LowCardinality(String),
+    season         UInt16,
+    venue          String,
+    match_date     Date,
+    home_score     UInt8,
+    away_score     UInt8
+)

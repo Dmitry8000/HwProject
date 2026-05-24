@@ -1,0 +1,69 @@
+@startuml rugby_architecture
+!theme plain
+title Rugby Analytics — контейнерная архитектура
+
+skinparam backgroundColor #F8FAFC
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam arrowColor #475569
+skinparam arrowThickness 1.5
+skinparam packageStyle rectangle
+skinparam noteBackgroundColor #FFFBEB
+skinparam noteBorderColor #F59E0B
+
+skinparam actorBackgroundColor #4F46E5
+skinparam actorBorderColor #3730A3
+skinparam actorFontColor #FFFFFF
+
+actor "Аналитик / Тренер" as User
+actor "Оператор стенда" as Ops
+
+package "Хост (Windows + Docker)" #E2E8F0 {
+
+  package "Загрузка (ingest)" #D1FAE5 {
+    [stream_match.py\nPython producer] as Producer
+  }
+
+  package "Docker network: rugby-net" #F1F5F9 {
+
+    package "Очередь" #FEF3C7 {
+      [Kafka\n:9092] as Kafka
+      [Zookeeper] as ZK
+    }
+
+    package "ClickHouse" #FEF9C3 {
+      [HTTP :8123\nmetrics :9363] as CH
+    }
+
+    package "BI" #E0F2FE {
+      [Superset\n:8088] as SS
+    }
+
+    package "Мониторинг" #FFEDD5 {
+      [Prometheus\n:9090] as Prom
+      [Grafana\n:3000] as Graf
+    }
+  }
+}
+
+User --> SS : KPI, heatmap\nlocalhost:18088
+Ops --> Graf : мониторинг\nlocalhost:3000
+Ops --> Prom : targets\nlocalhost:19090
+Ops --> Producer : запуск стрима
+
+Producer --> Kafka : JSONEachRow\nrugby.match.events
+Kafka --> CH : Kafka Engine\nmatch_events_kafka
+CH --> CH : MV -> match_events\nMergeTree
+CH --> SS : SQL\nrugby.v_*
+CH --> Prom : GET /metrics
+Prom --> Graf : PromQL
+ZK ..> Kafka
+
+note right of CH
+  **Слои данных**
+  DIM: players, matches
+  RAW: match_events
+  DM: v_player_match_metrics
+end note
+
+@enduml
